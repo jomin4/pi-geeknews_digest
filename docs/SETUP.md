@@ -107,6 +107,8 @@ CLAUDE.md의 작업 절차와 3절 체크리스트를 따를 것.
 
 키는 `.env`에만 넣는다 (T00에서 `.env.example`이 만들어진다: `cp .env.example .env`). `.env`는 git에 올라가지 않는다.
 
+코드는 `.env` 파일을 직접 읽지 않고 환경변수만 읽는다 (ARCH-S1). 로컬에서 키가 필요한 명령은 `uv run --env-file .env gndigest report --dry-run`처럼 uv가 `.env`를 넘기게 실행한다. 키가 없는 명령(`collect`)과 `uv run pytest`는 `.env` 없이 돈다.
+
 ### 5.1 Discord 봇 만들기 (T07 전에)
 
 1. discord.com/developers → New Application → 이름 입력
@@ -130,3 +132,4 @@ CLAUDE.md의 작업 절차와 3절 체크리스트를 따를 것.
 | 날짜 | 내용 |
 |---|---|
 | 2026-09-29 | 최초 작성 (Ubuntu 기준) |
+| 2026-09-29 | T00: `.env`를 `uv run --env-file`로 넘기는 방법 추가 |

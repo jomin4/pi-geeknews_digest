@@ -19,6 +19,28 @@ Claude Code 세션이 끝날 때마다 **맨 위에** 항목을 추가한다. �
 
 ---
 
+## 2026-09-29 · T00 저장소 · 환경 · CLI 뼈대
+- 환경: 클라우드 세션 (Claude Code)
+- 기준 문서 ID: 01 §3~5, ARCH-S1, REQ-14, SCH-R8, DATA-02, DATA-06, DATA-R7, JEV-C2
+- 한 일:
+  - `pyproject.toml`(uv, Python 3.12, uv_build), `.python-version`, `uv.lock`. 의존성은 지금 쓰는 pydantic, pytest만 넣고, 나머지(feedparser, httpx, respx, google-genai)는 쓰는 작업(T01, T05)에서 추가
+  - `cli.py`: collect / report / tune / show-profile 빈 명령, 모든 명령에 `--dry-run`, report에 `--cutoff`(시간대 없으면 거부, KST로 변환)
+  - `config.py`: 환경변수 읽기(명령마다 필요한 이름을 `require`로 지정, 빠진 이름을 모두 담은 오류), 비밀값을 가리는 repr, 기본 기준선(DATA-02), `JEV_MODEL` 기본값 `typesafe/jev-1.13`, KST
+  - `metrics.py`: DATA-06 한 줄 모델(`RunMetric`, 공통 필드 + 작업별 필드는 extra), `make_run_id`, `record_run`
+  - `storage.py`: `append_jsonl`만 먼저 만듦 (CLAUDE.md 7절 "data/는 storage.py로만"을 지키기 위해). 원자적 저장·검증은 T01
+  - `tests/conftest.py`: 모든 테스트에서 외부 소켓 연결·이름 조회를 막고, gndigest 환경변수를 비움 (REQ-14)
+  - `.env.example`, `data/` 초기 파일(`profile.json` 관심 분야 4개, 빈 `articles.json`·`feedback.json`, `reports/`). `state.json`은 DATA-02대로 첫 실행 때 만든다
+  - 포트폴리오 도구 확인: `figgen.py --all`, `npm install`, `npm run figures`, `npm run pdf`(초안 5쪽, 쪽 넘침 경고 없음). 그림 파일은 그대로였고 PDF만 바이너리가 달라져 되돌림
+- 바뀐 파일: `pyproject.toml`, `uv.lock`, `.python-version`, `.env.example`, `src/gndigest/*`, `tests/*`, `data/*`, `README.md`, `docs/SETUP.md`, `docs/worklog.md`
+- 테스트: `uv run pytest` 통과 34 / 실패 0. 네트워크 인터페이스가 없는 환경(`unshare -rn`)에서도 34 통과
+- 문서와 다르게 한 것:
+  - 작업 환경: ADR-007은 T00~T10을 로컬로 정했지만, 키·봇 설정이 필요 없는 T00~T02는 사용자 결정으로 클라우드 세션에서 진행한다. T03부터는 실제 API 확인이 있어 로컬에서 한다
+  - `storage.py`를 T01보다 먼저 만들었다 (위 이유). 동작 변경은 없음
+  - `npm run setup`(Chromium 설치)은 건너뜀: 이 환경에 Chromium이 이미 있고 `browser.mjs`가 찾아 씀
+- 지표: T00에는 기록할 지표 필드 없음 (`metrics.py` 뼈대만)
+- 미결 사항(OPEN) 결과: 해당 없음
+- 다음 작업: T01 RSS 수집
+
 ## 2026-09-29 · 설계 검토 결과 반영 (전송 실패·중복 전송 규칙 보완)
 - 환경: 클라우드 세션 (Claude Code)
 - 기준 문서 ID: SCH-R6, SCH-R9(신규), DSC-09, DSC-10, DATA-01, DATA-05, DATA-06, ARCH-01, REQ-03
