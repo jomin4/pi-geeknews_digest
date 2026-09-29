@@ -1,0 +1,108 @@
+{
+  "id": "FIG-P4-feedback-loop",
+  "texts": [
+    {
+      "text": "매일",
+      "x": 0,
+      "y": 78
+    },
+    {
+      "text": "매주",
+      "x": 0,
+      "y": 238
+    }
+  ],
+  "nodes": [
+    {
+      "id": "me",
+      "kind": "start",
+      "label": "나",
+      "x": 50,
+      "y": 56,
+      "w": 110,
+      "h": 64
+    },
+    {
+      "id": "gem",
+      "label": "Gemini 해석",
+      "x": 270,
+      "y": 60,
+      "w": 160
+    },
+    {
+      "id": "prof",
+      "label": "profile.json",
+      "color": "green",
+      "x": 540,
+      "y": 60,
+      "w": 160
+    },
+    {
+      "id": "fbj",
+      "label": "feedback.json",
+      "x": 270,
+      "y": 220,
+      "w": 160
+    },
+    {
+      "id": "tune",
+      "label": "주간 보정",
+      "x": 540,
+      "y": 220,
+      "w": 160
+    },
+    {
+      "id": "st",
+      "label": "state.json",
+      "color": "green",
+      "x": 810,
+      "y": 220,
+      "w": 150
+    },
+    {
+      "id": "jev",
+      "kind": "server",
+      "label": "Jev 판단",
+      "x": 1060,
+      "y": 50,
+      "w": 150,
+      "h": 236
+    }
+  ],
+  "edges": [
+    {
+      "from": "me",
+      "to": "gem",
+      "n": 1,
+      "label": "텍스트"
+    },
+    {
+      "from": "gem",
+      "to": "prof"
+    },
+    {
+      "from": "prof",
+      "to": "jev",
+      "n": 2
+    },
+    {
+      "from": "gem",
+      "to": "fbj",
+      "label": "글별 평가"
+    },
+    {
+      "from": "fbj",
+      "to": "tune"
+    },
+    {
+      "from": "tune",
+      "to": "st",
+      "n": 3,
+      "label": "내 승인"
+    },
+    {
+      "from": "st",
+      "to": "jev"
+    }
+  ]
+}

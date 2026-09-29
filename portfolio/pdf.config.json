@@ -1,0 +1,12 @@
+{
+  "title": "GeekNews Digest 포트폴리오",
+  "summary": "00-project-summary.md",
+  "problems": [
+    "P1",
+    "P2",
+    "P3",
+    "P4"
+  ],
+  "repo_url": "https://github.com/jomin4/pi-geeknews_digest",
+  "output": "dist/geeknews-digest-portfolio.pdf"
+}

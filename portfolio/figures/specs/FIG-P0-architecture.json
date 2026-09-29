@@ -1,0 +1,124 @@
+{
+  "id": "FIG-P0-architecture",
+  "nodes": [
+    {
+      "id": "rss",
+      "kind": "start",
+      "label": "GeekNews RSS",
+      "x": 0,
+      "y": 150,
+      "w": 150,
+      "h": 70
+    },
+    {
+      "id": "srv",
+      "kind": "server",
+      "label": "수집 · 리포트 실행\n(GitHub Actions)",
+      "x": 250,
+      "y": 60,
+      "w": 200,
+      "h": 250
+    },
+    {
+      "id": "jev",
+      "label": "Jev (판단)",
+      "color": "purple",
+      "x": 570,
+      "y": 70,
+      "w": 160
+    },
+    {
+      "id": "gem",
+      "label": "Gemini (요약)",
+      "color": "orange",
+      "x": 570,
+      "y": 157,
+      "w": 160
+    },
+    {
+      "id": "dat",
+      "label": "data/ (JSON)",
+      "x": 570,
+      "y": 244,
+      "w": 160
+    },
+    {
+      "id": "dc",
+      "label": "Discord",
+      "x": 250,
+      "y": 400,
+      "w": 200
+    },
+    {
+      "id": "me",
+      "kind": "start",
+      "label": "나 (18~20시)",
+      "x": 0,
+      "y": 393,
+      "w": 150,
+      "h": 70
+    }
+  ],
+  "edges": [
+    {
+      "from": "rss",
+      "to": "srv",
+      "label": "하루 4회"
+    },
+    {
+      "from": "srv",
+      "to": "jev",
+      "label": "판단"
+    },
+    {
+      "from": "srv",
+      "to": "gem",
+      "label": "요약"
+    },
+    {
+      "from": "srv",
+      "to": "dat",
+      "label": "저장"
+    },
+    {
+      "from": "srv",
+      "to": "dc",
+      "label": "리포트",
+      "from_side": "bottom",
+      "from_at": 0.35,
+      "to_side": "top",
+      "to_at": 0.35,
+      "flip": true
+    },
+    {
+      "from": "dc",
+      "to": "srv",
+      "label": "다음 실행",
+      "dashed": true,
+      "from_side": "top",
+      "from_at": 0.65,
+      "to_side": "bottom",
+      "to_at": 0.65,
+      "flip": true
+    },
+    {
+      "from": "dc",
+      "to": "me",
+      "from_side": "left",
+      "from_at": 0.3,
+      "to_side": "right",
+      "to_at": 0.3
+    },
+    {
+      "from": "me",
+      "to": "dc",
+      "label": "피드백",
+      "dashed": true,
+      "from_side": "right",
+      "from_at": 0.72,
+      "to_side": "left",
+      "to_at": 0.72,
+      "flip": true
+    }
+  ]
+}

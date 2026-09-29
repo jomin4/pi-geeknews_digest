@@ -1,0 +1,84 @@
+{
+  "id": "FIG-P3-summary-grounding",
+  "nodes": [
+    {
+      "id": "src",
+      "kind": "start",
+      "label": "RSS 원문 요약",
+      "x": 0,
+      "y": 60,
+      "w": 150,
+      "h": 64
+    },
+    {
+      "id": "gem",
+      "label": "Gemini 요약",
+      "color": "red",
+      "x": 230,
+      "y": 64,
+      "w": 140
+    },
+    {
+      "id": "jev",
+      "label": "Jev 검증",
+      "color": "green",
+      "x": 530,
+      "y": 64,
+      "w": 140
+    },
+    {
+      "id": "rpt",
+      "label": "리포트",
+      "x": 860,
+      "y": 64,
+      "w": 140
+    },
+    {
+      "id": "fb",
+      "label": "원문 요약으로 대체",
+      "x": 845,
+      "y": 200,
+      "w": 170
+    },
+    {
+      "id": "rec",
+      "label": "reports 기록",
+      "x": 530,
+      "y": 200,
+      "w": 140
+    }
+  ],
+  "edges": [
+    {
+      "from": "src",
+      "to": "gem",
+      "n": 1
+    },
+    {
+      "from": "gem",
+      "to": "jev",
+      "n": 2,
+      "note": "원문 외 내용?"
+    },
+    {
+      "from": "jev",
+      "to": "rpt",
+      "label": "≥ 0.7"
+    },
+    {
+      "from": "jev",
+      "to": "fb",
+      "label": "< 0.7",
+      "flip": true
+    },
+    {
+      "from": "fb",
+      "to": "rpt"
+    },
+    {
+      "from": "jev",
+      "to": "rec",
+      "n": 3
+    }
+  ]
+}

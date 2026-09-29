@@ -1,0 +1,9 @@
+.env
+out/
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+portfolio/figures/specs/*.mcp.json
+tools/portfolio/node_modules/
+tools/portfolio/.build/

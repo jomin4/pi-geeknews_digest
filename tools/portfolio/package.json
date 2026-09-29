@@ -1,0 +1,20 @@
+{
+  "name": "gndigest-portfolio-tools",
+  "private": true,
+  "type": "module",
+  "description": "포트폴리오 그림 내보내기(Excalidraw → SVG/PNG)와 PDF 빌드",
+  "scripts": {
+    "setup": "playwright-core install chromium",
+    "figures": "node export-figures.mjs",
+    "pdf": "node build-pdf.mjs",
+    "all": "node export-figures.mjs && node build-pdf.mjs"
+  },
+  "dependencies": {
+    "@excalidraw/excalidraw": "0.18.1",
+    "esbuild": "0.28.2",
+    "marked": "18.0.14",
+    "playwright-core": "1.63.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}

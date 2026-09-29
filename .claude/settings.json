@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv sync:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(uv run gndigest:*)",
+      "Bash(uv add:*)",
+      "Bash(python tools/figgen.py:*)",
+      "Bash(python3 tools/figgen.py:*)",
+      "Bash(npm --prefix tools/portfolio install:*)",
+      "Bash(npm --prefix tools/portfolio run:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git checkout -b:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Bash(cat .env:*)"
+    ]
+  }
+}
