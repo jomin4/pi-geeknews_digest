@@ -1,6 +1,6 @@
 # 00. 개요와 요구사항
 
-> 상태: 확정 · 최종 수정: 2026-09-28 · 관련 ADR: [ADR-001](decisions/ADR-001-rss-source.md), [ADR-003](decisions/ADR-003-discord-text-feedback.md)
+> 상태: 확정 · 최종 수정: 2026-09-29 · 관련 ADR: [ADR-001](decisions/ADR-001-rss-source.md), [ADR-003](decisions/ADR-003-discord-text-feedback.md)
 
 ## 1. 배경
 
@@ -19,7 +19,7 @@
 |---|---|---|
 | REQ-01 | GeekNews의 하루치 글을 누락 없이 수집한다 | SCH-R1~R4 |
 | REQ-02 | "오늘치" 범위는 어제 17:30 초과 ~ 오늘 17:30 이하 (KST) | SCH-R2 |
-| REQ-03 | 리포트는 18:00 KST 전에 Discord에 도착한다 | SCH-R5 |
+| REQ-03 | 리포트는 18:00 KST 전에 Discord에 도착한다 | SCH-R5, SCH-R9 |
 | REQ-04 | 관심 분야는 AI/LLM, 개발도구, 인프라/클라우드, 하드웨어 4개 | JEV-Q1 |
 | REQ-05 | 관심 글 Top은 최대 8개, 요약·추천 이유와 함께 보여준다 | JEV-R4, GEM-A |
 | REQ-06 | 리포트의 모든 글에 번호를 붙여 피드백에서 가리킬 수 있다 | DSC-03 |
@@ -60,3 +60,4 @@
 | 날짜 | 내용 |
 |---|---|
 | 2026-09-28 | 최초 작성 (claude.ai 설계 대화 결과) |
+| 2026-09-29 | REQ-03 관련 설계에 SCH-R9(백업 실행) 추가 |

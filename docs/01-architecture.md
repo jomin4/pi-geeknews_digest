@@ -1,13 +1,13 @@
 # 01. 전체 아키텍처
 
-> 상태: 확정 · 최종 수정: 2026-09-28 · 관련 코드: `src/gndigest/` · 관련 ADR: [ADR-002](decisions/ADR-002-jev-gemini-roles.md), [ADR-005](decisions/ADR-005-json-in-git.md)
+> 상태: 확정 · 최종 수정: 2026-09-29 · 관련 코드: `src/gndigest/` · 관련 ADR: [ADR-002](decisions/ADR-002-jev-gemini-roles.md), [ADR-005](decisions/ADR-005-json-in-git.md)
 
 ## ARCH-D1 전체 아키텍처
 
 ```mermaid
 flowchart TB
   subgraph S1["1. 수집 - GitHub Actions"]
-    CRON["크론 스케줄러<br/>수집 23·09·13시<br/>마감+리포트 17:30"]
+    CRON["크론 스케줄러<br/>수집 23·09·13시<br/>마감+리포트 17:30<br/>백업 17:50"]
     RSS[("GeekNews RSS<br/>최신 50건")]
     COL["수집기<br/>새 글만 누적"]
     ART[("articles.json<br/>수집함")]
@@ -49,7 +49,7 @@ flowchart TB
 
 | ID | 컴포넌트 | 하는 일 | 코드 | 상세 |
 |---|---|---|---|---|
-| ARCH-01 | 스케줄러 | 하루 4회 실행을 시작한다 | `.github/workflows/` | [02](02-schedule-and-range.md) |
+| ARCH-01 | 스케줄러 | 하루 4회 실행과 17:50 백업 리포트 실행(SCH-R9)을 시작한다 | `.github/workflows/` | [02](02-schedule-and-range.md) |
 | ARCH-02 | 수집기 | RSS를 읽어 범위 안의 새 글만 수집함에 추가 | `rss.py`, `window.py` | [02](02-schedule-and-range.md) |
 | ARCH-03 | 피드백 리더 | 피드백 채널의 내 새 메시지를 읽는다 | `discord_client.py` | [07](07-feedback-loop.md) |
 | ARCH-04 | 피드백 해석기 | Gemini로 메시지를 변경 사항 JSON으로 바꾸고 프로필 갱신 | `feedback.py`, `prefs.py` | [05](05-gemini-prompts.md), [07](07-feedback-loop.md) |
@@ -145,3 +145,4 @@ geeknews-digest/
 |---|---|
 | 2026-09-28 | 최초 작성 |
 | 2026-09-28 | 포트폴리오 구조 반영: ARCH-12 지표 기록기, experiments/·portfolio/·tools/ 추가 (ADR-008) |
+| 2026-09-29 | ARCH-01·ARCH-D1에 17:50 백업 리포트 실행 추가 (SCH-R9) |

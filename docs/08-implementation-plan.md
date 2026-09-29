@@ -1,6 +1,6 @@
 # 08. 구현 계획 (로컬 → 클라우드)
 
-> 상태: 확정 · 최종 수정: 2026-09-28 · 관련 ADR: [ADR-007](decisions/ADR-007-local-first.md), [ADR-008](decisions/ADR-008-metrics-for-evidence.md)
+> 상태: 확정 · 최종 수정: 2026-09-29 · 관련 ADR: [ADR-007](decisions/ADR-007-local-first.md), [ADR-008](decisions/ADR-008-metrics-for-evidence.md)
 
 ## 1. 진행 방식
 
@@ -64,10 +64,10 @@ flowchart LR
 - 지표: `rss_items`, `new_items`, `rss_oldest_published`, `rss_newest_published` (P1 증거)
 
 ### T02 범위 · 상태
-- 기준: SCH-R1~R8, DATA-02
+- 기준: SCH-R1~R9, DATA-02
 - 산출물: `window.py`, State 모델, 최초 실행 시 state 생성
 - 완료 조건: 02 §2의 경계 사례 표 6개가 모두 테스트로 존재하고 통과
-- 테스트: 경계 초과/이하, 마감 고정, 전송 실패 시 cutoff 유지, 마감 이후 글 잔류
+- 테스트: 경계 초과/이하, 마감 고정, 전송 실패 시 cutoff·수집함 유지, 마감 이후 글 잔류, 오늘 리포트를 이미 보냈는지 판별(SCH-R9)
 
 ### T03 Jev 판단
 - 기준: JEV-C1~C9, JEV-Q1~Q4
@@ -101,7 +101,7 @@ flowchart LR
 - 기준: DSC-01~10, 06 §5
 - 산출물: `report.py`(임베드 빌더), `discord_client.py`(전송, 무음 플래그, 재시도)
 - 완료 조건: `--dry-run`이면 `out/report-preview.md`와 `out/discord_payload.json`만 쓴다. 실제 모드로 **테스트용 Discord 서버**에 1회 전송 성공
-- 테스트: 6,000자·10개 제한 분할, 기타 목록 4,096자 초과 시 카드 추가, 메시지 2만 재전송
+- 테스트: 6,000자·10개 제한 분할, 기타 목록 4,096자 초과 시 카드 추가, 메시지 2만 재전송, 메시지 1 실패 시 메시지 2 미전송·cutoff 유지, 메시지 2만 실패 시 `msg2_failed` 기록과 다음 리포트 안내 카드 (DSC-10)
 - 확인: OPEN-3 (게이트웨이 1회 연결 필요 여부)
 - 지표: `discord_msg1_sent_at` (R2 증거)
 
@@ -122,14 +122,15 @@ flowchart LR
 - 산출물: `tests/test_e2e.py`(모든 외부 호출 가짜), 수동 E2E 체크리스트 결과
 - 완료 조건:
   - 가짜 응답 E2E: collect 3회 → report 1회 → 피드백 → 다음 report까지 통과
+  - 02 §2 **전송·중복 사례** 표가 모두 가짜 응답 E2E로 존재하고 통과
   - 실제 API E2E: 테스트 Discord 서버로 `gndigest report` 실제 실행, 폰에서 리포트 확인
   - 문서 상태를 `구현됨`으로 바꾸고 미결 사항(OPEN) 결과 기록
 
 ### T11 GitHub Actions
-- 기준: 02 §1, §3, ARCH-S1, DATA-R5
-- 산출물: `.github/workflows/collect.yml`, `report.yml`(workflow_dispatch + `dry_run` 입력), `ci.yml`(PR마다 pytest)
-- 완료 조건: Secrets 등록, 수동 실행(dry-run) 성공, 다음 날 예약 실행이 18:00 전 도착
-- 테스트: concurrency 설정 확인, 커밋 충돌 시 `pull --rebase`
+- 기준: 02 §1, §3, SCH-R9, ARCH-S1, DATA-R5
+- 산출물: `.github/workflows/collect.yml`, `report.yml`(cron 17:30 + 17:50 백업, workflow_dispatch + `dry_run` 입력), `ci.yml`(PR마다 pytest)
+- 완료 조건: Secrets 등록, 수동 실행(dry-run) 성공, 다음 날 예약 실행이 18:00 전 도착, 같은 날 17:50 백업 실행이 `skipped`로 끝남
+- 테스트: concurrency 설정 확인, 실행 시작 시와 커밋 전 `pull --rebase`
 - 지표: `scheduled_at`(워크플로의 cron 예약 시각), `started_at` (R2 증거)
 
 ### T12 클라우드 세션 이관
@@ -181,3 +182,4 @@ CLAUDE.md의 작업 절차를 따를 것.
 |---|---|
 | 2026-09-28 | 최초 작성 |
 | 2026-09-28 | 포트폴리오 반영: 작업별 지표, Phase 4(T13·T14), PLAN-D1 갱신 (ADR-008) |
+| 2026-09-29 | T02·T07·T10·T11에 전송 실패 처리(SCH-R6, DSC-10)와 백업 실행(SCH-R9) 테스트·완료 조건 추가 |
