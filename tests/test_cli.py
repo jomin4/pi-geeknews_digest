@@ -15,7 +15,7 @@ def test_cli_help_lists_all_commands(capsys: pytest.CaptureFixture[str]) -> None
         assert command in out
 
 
-@pytest.mark.parametrize("command", ["collect", "report", "tune", "show-profile"])
+@pytest.mark.parametrize("command", ["report", "tune", "show-profile"])
 @pytest.mark.parametrize("dry_run", [[], ["--dry-run"]])
 def test_cli_commands_exist_and_run(command: str, dry_run: list[str], capsys: pytest.CaptureFixture[str]) -> None:
     assert main([command, *dry_run]) == 0

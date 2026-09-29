@@ -108,7 +108,7 @@ geeknews-digest/
 ├─ pyproject.toml
 ├─ .env.example
 ├─ src/gndigest/
-│  ├─ cli.py            collect | report | tune | show-profile (--dry-run)
+│  ├─ cli.py            collect | report | tune | show-profile (--dry-run, collect --feed-file)
 │  ├─ config.py         환경변수, 기본 기준선
 │  ├─ models.py         pydantic 모델 (DATA-01~05)
 │  ├─ storage.py        ARCH-11
@@ -146,3 +146,4 @@ geeknews-digest/
 | 2026-09-28 | 최초 작성 |
 | 2026-09-28 | 포트폴리오 구조 반영: ARCH-12 지표 기록기, experiments/·portfolio/·tools/ 추가 (ADR-008) |
 | 2026-09-29 | ARCH-01·ARCH-D1에 17:50 백업 리포트 실행 추가 (SCH-R9) |
+| 2026-09-29 | T01: `collect --feed-file`(저장해 둔 피드로 실행) 추가 |

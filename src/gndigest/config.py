@@ -9,10 +9,14 @@ from __future__ import annotations
 import os
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+from datetime import time
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 KST = ZoneInfo("Asia/Seoul")
+
+# SCH-R3: 마감 시각은 실행 시각과 무관하게 매일 17:30 KST로 고정
+REPORT_CUTOFF = time(17, 30)
 
 DATA_DIR = Path("data")
 OUT_DIR = Path("out")

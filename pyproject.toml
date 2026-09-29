@@ -5,6 +5,8 @@ description = "GeekNews RSS를 Jev(판단)와 Gemini(요약)로 골라 Discord�
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "feedparser>=6.0.14",
+    "httpx>=0.28.1",
     "pydantic>=2.9",
 ]
 
@@ -14,6 +16,7 @@ gndigest = "gndigest.cli:main"
 [dependency-groups]
 dev = [
     "pytest>=8.3",
+    "respx>=0.23.1",
 ]
 
 [build-system]

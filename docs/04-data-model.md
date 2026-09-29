@@ -115,9 +115,11 @@ erDiagram
 
 | 필드 | 만드는 법 |
 |---|---|
-| `id` | 링크의 `topic?id=` 숫자 |
+| `id` | 링크의 `topic?id=` 숫자. id가 없는 항목은 건너뛴다 |
+| `title` | RSS 제목의 HTML 엔터티를 푼다 (GeekNews는 CDATA 안에 `&amp;`처럼 한 번 더 이스케이프함, L-20260929-2) |
+| `published` | RSS `published`를 KST로 변환 (SCH-R1). `updated`는 쓰지 않는다 (OPEN-4) |
 | `type` | 제목이 `Show GN:`으로 시작하면 `show`, `Ask GN:`이면 `ask`, 나머지 `news` |
-| `summary` | RSS `content`에서 HTML 태그 제거, 공백 정리 |
+| `summary` | RSS `content`에서 HTML 태그 제거, 공백 정리. 블록 태그(`<li>`, `<p>` 등) 경계는 공백으로 바꾼다. GeekNews가 앞부분만 잘라 `...`로 끝나며 약 40~190자다 (L-20260929-1) |
 
 ## DATA-02 state.json — 실행 상태
 
@@ -259,4 +261,5 @@ erDiagram
 |---|---|
 | 2026-09-28 | 최초 작성. 아키텍처의 articles.json을 수집함(DATA-01)과 리포트 기록(DATA-05)으로 분리 |
 | 2026-09-28 | 포트폴리오 증거용 실행 지표 DATA-06 추가, DATA-D1에 RUN_METRIC 추가 (ADR-008) |
+| 2026-09-29 | T01: DATA-01 필드 표에 `title`·`published` 처리와 `summary` 실제 길이 추가 (OPEN-4, L-20260929-1·2) |
 | 2026-09-29 | DATA-01 수집함 정리를 전송 성공 시로 한정(SCH-R6). DATA-05에 `msg2_failed` 추가(DSC-10), DATA-D1 REPORT 갱신. DATA-06에 `skipped` 기록 추가(SCH-R9) |

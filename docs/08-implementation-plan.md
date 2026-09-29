@@ -57,7 +57,7 @@ flowchart LR
 
 ### T01 RSS 수집
 - 기준: ARCH-02, DATA-01, SCH-R1, SCH-R4
-- 산출물: `rss.py`, `storage.py`, `models.py`(Article), `tests/fixtures/rss_sample.xml`(실제 피드 저장본)
+- 산출물: `rss.py`, `storage.py`, `models.py`(Article), `tests/fixtures/rss_sample.xml`(실제 피드 저장본), `collect --feed-file`(저장본으로 실행)
 - 완료 조건: `gndigest collect --dry-run`이 fixture로 수집함 결과를 `out/`에 쓴다. id·type·summary 추출 정확
 - 테스트: Show GN/Ask GN 판별, HTML 제거, 중복 id 무시, 원자적 저장
 - 확인: OPEN-4 (`published` vs `updated`)
@@ -182,4 +182,5 @@ CLAUDE.md의 작업 절차를 따를 것.
 |---|---|
 | 2026-09-28 | 최초 작성 |
 | 2026-09-28 | 포트폴리오 반영: 작업별 지표, Phase 4(T13·T14), PLAN-D1 갱신 (ADR-008) |
+| 2026-09-29 | T01 산출물에 `collect --feed-file` 추가 |
 | 2026-09-29 | T02·T07·T10·T11에 전송 실패 처리(SCH-R6, DSC-10)와 백업 실행(SCH-R9) 테스트·완료 조건 추가 |

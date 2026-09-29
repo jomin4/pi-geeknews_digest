@@ -9,13 +9,14 @@ import argparse
 import sys
 from collections.abc import Sequence
 from datetime import datetime
+from pathlib import Path
 
-from gndigest import __version__
-from gndigest.config import KST
+from gndigest import __version__, metrics, rss, storage, window
+from gndigest.config import DATA_DIR, KST, OUT_DIR
+from gndigest.models import ArticlesFile
 
 # 명령 → 동작을 구현할 작업 (docs/08-implementation-plan.md)
 PENDING_TASK = {
-    "collect": "T01",
     "report": "T02~T07",
     "tune": "T09",
     "show-profile": "T09",
@@ -55,7 +56,13 @@ def build_parser() -> argparse.ArgumentParser:
         )
         return cmd
 
-    add("collect", "RSS를 읽어 새 글을 수집함(articles.json)에 쌓는다")
+    collect = add("collect", "RSS를 읽어 새 글을 수집함(articles.json)에 쌓는다")
+    collect.add_argument(
+        "--feed-file",
+        type=Path,
+        metavar="파일",
+        help="RSS를 요청하지 않고 저장해 둔 피드 파일을 쓴다 (예: tests/fixtures/rss_sample.xml)",
+    )
     report = add("report", "최종 수집 → 피드백 해석 → 판단 → 요약 → Discord 전송")
     report.add_argument(
         "--cutoff",
@@ -68,8 +75,56 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def now_kst() -> datetime:
+    """현재 KST 시각 (초 단위, DATA-01·DATA-06 예시 형식)."""
+    return datetime.now(KST).replace(microsecond=0)
+
+
+# spec: SCH-R4, DATA-06
+def run_collect(args: argparse.Namespace) -> int:
+    """RSS 수집. --dry-run이면 data/는 그대로 두고 결과를 out/에만 쓴다 (SCH-R8)."""
+    started = now_kst()
+    articles_path = DATA_DIR / "articles.json"
+    target = OUT_DIR / "articles.json" if args.dry_run else articles_path
+    metrics_path = OUT_DIR / "metrics.jsonl" if args.dry_run else metrics.METRICS_FILE
+    run_id = metrics.make_run_id("collect", started)
+
+    try:
+        inbox = storage.read_model(articles_path, ArticlesFile, ArticlesFile())
+        # state.json 연결은 T02. 그 전에는 첫 실행 규칙(어제 17:30)을 쓴다 (DATA-02).
+        last_cutoff = window.initial_last_cutoff(started)
+        raw = args.feed_file.read_bytes() if args.feed_file else rss.fetch_feed()
+        result = rss.collect(raw, inbox.items, last_cutoff, started)
+        storage.write_model(target, ArticlesFile(items=result.inbox))
+    except (rss.RssError, storage.DataFileError, OSError) as exc:
+        metrics.record_run(
+            metrics.RunMetric(
+                run_id=run_id, kind="collect", started_at=started, finished_at=now_kst(),
+                error=str(exc).splitlines()[0][:200],
+            ),
+            metrics_path,
+        )
+        print(f"gndigest collect 실패: {exc}", file=sys.stderr)
+        return 1
+
+    metrics.record_run(
+        metrics.RunMetric(
+            run_id=run_id, kind="collect", started_at=started, finished_at=now_kst(),
+            **result.metric_fields(),
+        ),
+        metrics_path,
+    )
+    print(
+        f"RSS {result.rss_items}건 · 새 글 {len(result.new_items)}건 · "
+        f"수집함 {len(result.inbox)}건 → {target}"
+    )
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.command == "collect":
+        return run_collect(args)
     task = PENDING_TASK[args.command]
     print(f"gndigest {args.command}: 아직 구현되지 않았습니다 ({task}에서 구현)", file=sys.stderr)
     return 0

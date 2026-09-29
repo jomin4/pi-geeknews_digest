@@ -19,6 +19,29 @@ Claude Code 세션이 끝날 때마다 **맨 위에** 항목을 추가한다. �
 
 ---
 
+## 2026-09-29 · T01 RSS 수집
+- 환경: 클라우드 세션 (Claude Code). 사용자가 환경 네트워크를 Custom(`news.hada.io` + 기본 패키지 저장소)으로 바꿔 피드를 받음
+- 기준 문서 ID: ARCH-02, DATA-01, DATA-06, DATA-R1, DATA-R2, DATA-R7, SCH-R1, SCH-R4, OPEN-4
+- 한 일:
+  - `tests/fixtures/rss_sample.xml`: 2026-09-29 21:51 KST 실제 피드 원문 (50건)
+  - `rss.py`: `fetch_feed`(httpx, User-Agent, HTTP 오류·시간 초과를 RssError로), `parse_feed`(feedparser, 제목 엔터티 풀기, HTML 제거, id·type 추출, KST 변환, ISO가 아니면 published_parsed 사용), `select_new`(SCH-R4), `collect`(지표 필드 계산)
+  - `models.py`: Article, ArticlesFile (KST aware datetime만 허용, 모르는 필드 거부)
+  - `storage.py`: `read_model`(없으면 기본값, 깨졌으면 멈춤), `write_model`(임시 파일 → fsync → os.replace)
+  - `window.py`: `initial_last_cutoff`(DATA-02 첫 실행: 어제 17:30)만. state.json 연결은 T02
+  - `cli.py`: `collect` 구현. `--dry-run`이면 `out/articles.json`, `out/metrics.jsonl`에만 쓴다. `--feed-file`로 저장본 사용. 실패도 지표에 `error`로 기록
+- 바뀐 파일: `src/gndigest/{rss,models,storage,window,cli,config}.py`, `tests/test_{rss,storage,collect_cli,cli}.py`, `tests/fixtures/rss_sample.xml`, `pyproject.toml`, `uv.lock`, `docs/01`, `04`, `08`, `docs/README.md`, `portfolio/logs/L-20260929-1·2`, `portfolio/evidence/P1/`, `portfolio/problems/P1`, `README.md`
+- 테스트: `uv run pytest` 통과 79 / 실패 0. 네트워크 없는 환경(`unshare -rn`)에서도 79 통과. 피드가 아니거나 항목이 0건인 응답은 수집 실패로 처리 (봇 확인 화면을 "0건 수집"으로 넘기지 않기 위해)
+- 확인: `uv run gndigest collect --dry-run --feed-file tests/fixtures/rss_sample.xml` → `RSS 50건 · 새 글 50건 · 수집함 50건 → out/articles.json`. 실제 피드로 한 `collect --dry-run`도 같은 결과
+- 문서와 다르게 한 것:
+  - `collect --feed-file` 옵션 추가 (완료 조건 "fixture로 dry-run"을 위해). 01 §5, 08 T01에 반영
+  - 제목 엔터티 풀기와 요약의 블록 태그 → 공백 처리를 DATA-01 표에 추가 (L-20260929-2)
+  - `last_cutoff`는 T02 전까지 첫 실행 규칙(어제 17:30)을 쓴다
+- 미결 사항(OPEN) 결과: OPEN-4 → 50건 모두 `published = updated`. `published`만 쓴다 (docs/README.md §5)
+- 지표: `rss_items`, `new_items`, `rss_oldest_published`, `rss_newest_published` (P1)
+- 문제 해결 로그: L-20260929-1 (OPEN-4, 피드 범위 22시간 33분, 원문 요약 최대 186자), L-20260929-2 (제목 이중 이스케이프)
+- 사용자에게 알린 설계 관찰: RSS 원문 요약이 중앙값 152자라 Gemini 요약 목표(150자)와 거의 같다 (GEM-A). 설계는 바꾸지 않음
+- 다음 작업: T02 범위 · 상태
+
 ## 2026-09-29 · T00 저장소 · 환경 · CLI 뼈대
 - 환경: 클라우드 세션 (Claude Code)
 - 기준 문서 ID: 01 §3~5, ARCH-S1, REQ-14, SCH-R8, DATA-02, DATA-06, DATA-R7, JEV-C2
