@@ -1,0 +1,28 @@
+[project]
+name = "gndigest"
+version = "0.1.0"
+description = "GeekNews RSS를 Jev(판단)와 Gemini(요약)로 골라 Discord로 보내는 개인 리포트 봇"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "feedparser>=6.0.14",
+    "httpx>=0.28.1",
+    "pydantic>=2.9",
+]
+
+[project.scripts]
+gndigest = "gndigest.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "respx>=0.23.1",
+]
+
+[build-system]
+requires = ["uv_build>=0.8.17,<0.9.0"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

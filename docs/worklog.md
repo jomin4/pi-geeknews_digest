@@ -19,6 +19,89 @@ Claude Code 세션이 끝날 때마다 **맨 위에** 항목을 추가한다. �
 
 ---
 
+## 2026-09-30 · 로컬 이관 준비
+- 환경: 클라우드 세션 (Claude Code)
+- 한 일: `docs/SETUP.md`를 로컬 이어받기 기준으로 고침 (현재 상태, 기존 폴더 처리, `gh auth login`, 동작 확인 `uv sync`·`pytest`·`collect --dry-run`, 첫 로컬 세션 T03 지시문). 문서 보완·T00~T02를 main에 합치는 PR 생성
+- 다음 작업: T03 Jev 판단 (로컬, SETUP.md 4.2)
+
+## 2026-09-30 · T02 범위 · 상태
+- 환경: 클라우드 세션 (Claude Code)
+- 기준 문서 ID: SCH-R1~R4, SCH-R6~R9, DATA-02, DATA-R2
+- 한 일:
+  - `models.py`: State, Thresholds, PendingProposal (JSON 키 `from`은 alias로 문서 모양 유지, 기준선 키는 6개만 허용)
+  - `window.py`: `report_cutoff`(SCH-R3, 실행 이전의 가장 최근 17:30), `in_range`(SCH-R2), `split_inbox`(SCH-R7), `already_sent`(SCH-R9), `advance_after_send`(SCH-R6, 전송 성공 뒤에만 호출), `new_state`·`load_state`(DATA-02, dry-run은 파일을 만들지 않음 SCH-R8)
+  - `cli.py`: collect가 `state.json`의 `last_cutoff`를 쓴다. 첫 실행(dry-run 아님)이면 state.json 생성. 수집은 state를 바꾸지 않는다
+  - `storage.write_model`: alias로 저장 (`from`)
+- 바뀐 파일: `src/gndigest/{models,window,cli,storage}.py`, `tests/test_{window,state,collect_cli}.py`, `docs/02`, `docs/08`, `portfolio/logs/L-20260930-1.md`, `portfolio/problems/{P1,R2}`, `README.md`
+- 테스트: `uv run pytest` 통과 114 / 실패 0 (네트워크 없는 환경에서도 114). 02 §2 경계 사례 6개 모두 `test_sch_r*_caseN_*`로 존재
+- 문서와 다르게 한 것: SCH-R3에 없던 경우(17:30 전·자정 넘어 시작한 실행)를 사용자 결정으로 "가장 최근 17:30"으로 정하고 02 문서를 먼저 고침 (L-20260930-1)
+- 사용자 결정 (T01 관찰 후속): RSS 원문 요약(중앙값 152자)과 Gemini 요약 목표(150자)가 비슷하지만 GEM-A는 그대로 둔다
+- 남은 것: SCH-R5는 cron 설정이라 T11, SCH-R6·R9를 리포트 실행에 연결하는 일은 T07·T10
+- 지표: 없음
+- 다음 작업: T03 Jev 판단 (실제 API 스모크 테스트가 있어 로컬, ADR-007)
+
+## 2026-09-29 · T01 RSS 수집
+- 환경: 클라우드 세션 (Claude Code). 사용자가 환경 네트워크를 Custom(`news.hada.io` + 기본 패키지 저장소)으로 바꿔 피드를 받음
+- 기준 문서 ID: ARCH-02, DATA-01, DATA-06, DATA-R1, DATA-R2, DATA-R7, SCH-R1, SCH-R4, OPEN-4
+- 한 일:
+  - `tests/fixtures/rss_sample.xml`: 2026-09-29 21:51 KST 실제 피드 원문 (50건)
+  - `rss.py`: `fetch_feed`(httpx, User-Agent, HTTP 오류·시간 초과를 RssError로), `parse_feed`(feedparser, 제목 엔터티 풀기, HTML 제거, id·type 추출, KST 변환, ISO가 아니면 published_parsed 사용), `select_new`(SCH-R4), `collect`(지표 필드 계산)
+  - `models.py`: Article, ArticlesFile (KST aware datetime만 허용, 모르는 필드 거부)
+  - `storage.py`: `read_model`(없으면 기본값, 깨졌으면 멈춤), `write_model`(임시 파일 → fsync → os.replace)
+  - `window.py`: `initial_last_cutoff`(DATA-02 첫 실행: 어제 17:30)만. state.json 연결은 T02
+  - `cli.py`: `collect` 구현. `--dry-run`이면 `out/articles.json`, `out/metrics.jsonl`에만 쓴다. `--feed-file`로 저장본 사용. 실패도 지표에 `error`로 기록
+- 바뀐 파일: `src/gndigest/{rss,models,storage,window,cli,config}.py`, `tests/test_{rss,storage,collect_cli,cli}.py`, `tests/fixtures/rss_sample.xml`, `pyproject.toml`, `uv.lock`, `docs/01`, `04`, `08`, `docs/README.md`, `portfolio/logs/L-20260929-1·2`, `portfolio/evidence/P1/`, `portfolio/problems/P1`, `README.md`
+- 테스트: `uv run pytest` 통과 79 / 실패 0. 네트워크 없는 환경(`unshare -rn`)에서도 79 통과. 피드가 아니거나 항목이 0건인 응답은 수집 실패로 처리 (봇 확인 화면을 "0건 수집"으로 넘기지 않기 위해)
+- 확인: `uv run gndigest collect --dry-run --feed-file tests/fixtures/rss_sample.xml` → `RSS 50건 · 새 글 50건 · 수집함 50건 → out/articles.json`. 실제 피드로 한 `collect --dry-run`도 같은 결과
+- 문서와 다르게 한 것:
+  - `collect --feed-file` 옵션 추가 (완료 조건 "fixture로 dry-run"을 위해). 01 §5, 08 T01에 반영
+  - 제목 엔터티 풀기와 요약의 블록 태그 → 공백 처리를 DATA-01 표에 추가 (L-20260929-2)
+  - `last_cutoff`는 T02 전까지 첫 실행 규칙(어제 17:30)을 쓴다
+- 미결 사항(OPEN) 결과: OPEN-4 → 50건 모두 `published = updated`. `published`만 쓴다 (docs/README.md §5)
+- 지표: `rss_items`, `new_items`, `rss_oldest_published`, `rss_newest_published` (P1)
+- 문제 해결 로그: L-20260929-1 (OPEN-4, 피드 범위 22시간 33분, 원문 요약 최대 186자), L-20260929-2 (제목 이중 이스케이프)
+- 사용자에게 알린 설계 관찰: RSS 원문 요약이 중앙값 152자라 Gemini 요약 목표(150자)와 거의 같다 (GEM-A). 설계는 바꾸지 않음
+- 다음 작업: T02 범위 · 상태
+
+## 2026-09-29 · T00 저장소 · 환경 · CLI 뼈대
+- 환경: 클라우드 세션 (Claude Code)
+- 기준 문서 ID: 01 §3~5, ARCH-S1, REQ-14, SCH-R8, DATA-02, DATA-06, DATA-R7, JEV-C2
+- 한 일:
+  - `pyproject.toml`(uv, Python 3.12, uv_build), `.python-version`, `uv.lock`. 의존성은 지금 쓰는 pydantic, pytest만 넣고, 나머지(feedparser, httpx, respx, google-genai)는 쓰는 작업(T01, T05)에서 추가
+  - `cli.py`: collect / report / tune / show-profile 빈 명령, 모든 명령에 `--dry-run`, report에 `--cutoff`(시간대 없으면 거부, KST로 변환)
+  - `config.py`: 환경변수 읽기(명령마다 필요한 이름을 `require`로 지정, 빠진 이름을 모두 담은 오류), 비밀값을 가리는 repr, 기본 기준선(DATA-02), `JEV_MODEL` 기본값 `typesafe/jev-1.13`, KST
+  - `metrics.py`: DATA-06 한 줄 모델(`RunMetric`, 공통 필드 + 작업별 필드는 extra), `make_run_id`, `record_run`
+  - `storage.py`: `append_jsonl`만 먼저 만듦 (CLAUDE.md 7절 "data/는 storage.py로만"을 지키기 위해). 원자적 저장·검증은 T01
+  - `tests/conftest.py`: 모든 테스트에서 외부 소켓 연결·이름 조회를 막고, gndigest 환경변수를 비움 (REQ-14)
+  - `.env.example`, `data/` 초기 파일(`profile.json` 관심 분야 4개, 빈 `articles.json`·`feedback.json`, `reports/`). `state.json`은 DATA-02대로 첫 실행 때 만든다
+  - 포트폴리오 도구 확인: `figgen.py --all`, `npm install`, `npm run figures`, `npm run pdf`(초안 5쪽, 쪽 넘침 경고 없음). 그림 파일은 그대로였고 PDF만 바이너리가 달라져 되돌림
+- 바뀐 파일: `pyproject.toml`, `uv.lock`, `.python-version`, `.env.example`, `src/gndigest/*`, `tests/*`, `data/*`, `README.md`, `docs/SETUP.md`, `docs/worklog.md`
+- 테스트: `uv run pytest` 통과 34 / 실패 0. 네트워크 인터페이스가 없는 환경(`unshare -rn`)에서도 34 통과
+- 문서와 다르게 한 것:
+  - 작업 환경: ADR-007은 T00~T10을 로컬로 정했지만, 키·봇 설정이 필요 없는 T00~T02는 사용자 결정으로 클라우드 세션에서 진행한다. T03부터는 실제 API 확인이 있어 로컬에서 한다
+  - `storage.py`를 T01보다 먼저 만들었다 (위 이유). 동작 변경은 없음
+  - `npm run setup`(Chromium 설치)은 건너뜀: 이 환경에 Chromium이 이미 있고 `browser.mjs`가 찾아 씀
+- 지표: T00에는 기록할 지표 필드 없음 (`metrics.py` 뼈대만)
+- 미결 사항(OPEN) 결과: 해당 없음
+- 다음 작업: T01 RSS 수집
+
+## 2026-09-29 · 설계 검토 결과 반영 (전송 실패·중복 전송 규칙 보완)
+- 환경: 클라우드 세션 (Claude Code)
+- 기준 문서 ID: SCH-R6, SCH-R9(신규), DSC-09, DSC-10, DATA-01, DATA-05, DATA-06, ARCH-01, REQ-03
+- 한 일: 설계 문서 검토에서 찾은 빈틈을 사용자 합의대로 문서에 반영 (코드 없음)
+  - 수집함은 전송 성공 시에만 비운다. 전송 성공 = 메시지 1 성공 (SCH-R6, DATA-01)
+  - 메시지 1은 성공하고 메시지 2만 실패하면 보낸 것으로 처리하고, `msg2_failed`를 기록해 다음 리포트 안내 카드에 알린다 (DSC-10, DSC-09, DATA-05)
+  - 예약 실행이 빠지는 날을 위해 17:50 백업 리포트 실행을 둔다. 이미 보냈으면 건너뛰고 `skipped`를 기록한다 (SCH-R9, DATA-06)
+  - SCH-D2의 판단 대상을 "수집함 전체"에서 "범위 안 기사"로 고쳤다 (SCH-R2·R7과 맞춤)
+  - 02 §3: GitHub concurrency는 대기 실행을 하나만 두는 동작과 실행 시작 시 `pull --rebase` 추가
+  - docs/README.md ID 표의 작업 범위 `T00~T12` → `T00~T14`
+- 바뀐 파일: `docs/00`, `01`, `02`, `04`, `06`, `08`, `docs/README.md`, `portfolio/problems/R2-actions-delay.md`
+- 다이어그램: ARCH-D1, SCH-D1, SCH-D2, DSC-D1, DATA-D1 갱신·문법 확인
+- 테스트: 해당 없음 (코드 없음)
+- 문서와 다르게 한 것: 없음 (문서 자체 보완)
+- 포트폴리오 그림: 영향 없음 (수집은 여전히 하루 4회, 백업 실행은 그림 범위 밖)
+- 다음 작업: T00
+
 ## 2026-09-29 · 로컬 세팅 준비와 첫 업로드
 - 환경: claude.ai 설계 대화
 - 한 일:

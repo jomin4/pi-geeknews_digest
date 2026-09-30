@@ -55,7 +55,7 @@ GeekNews RSS를 하루 4번 수집하고, 매일 17:30(KST)에 **Jev가 판단**
 | `GEM-A` / `GEM-B` | 요약 / 피드백 해석 프롬프트 | GEM-A1 원문 외 내용 금지 |
 | `DSC-` | Discord 양식 | DSC-04 메시지 분할 |
 | `FB-` | 피드백 규칙 | FB-06 60일 정리 |
-| `T00`~`T12` | 구현 작업 | T03 Jev 판단 |
+| `T00`~`T14` | 구현 작업 | T03 Jev 판단 |
 | `ADR-` | 결정 기록 | ADR-006 Top 채우지 않기 |
 | `P` / `R` | 포트폴리오 문제 해결 후보 / 예비 | P2 Gemini 호출 절감 |
 | `L-날짜-번호` | 문제 해결 로그 | L-20261002-1 |
@@ -112,5 +112,5 @@ GeekNews RSS를 하루 4번 수집하고, 매일 17:30(KST)에 **Jev가 판단**
 | OPEN-1 | Jev criteria를 한국어로 써도 정확한가? 영어 기준과 10건 비교 | T03 | - |
 | OPEN-2 | Gemini 무료 티어에서 쓸 Flash 모델 이름과 현재 한도 (AI Studio에서 확인) | T05 | - |
 | OPEN-3 | Discord 봇이 REST만으로 메시지를 보내기 전에 게이트웨이 1회 연결이 필요한지 | T07 | - |
-| OPEN-4 | RSS의 `published`와 `updated`가 다른 글이 있는지 (수정된 글 처리) | T01 | - |
+| OPEN-4 | RSS의 `published`와 `updated`가 다른 글이 있는지 (수정된 글 처리) | T01 | 2026-09-29 피드 50건 모두 같음. `published`만 쓰고 `updated`는 읽지 않는다 ([L-20260929-1](../portfolio/logs/L-20260929-1.md)) |
 | OPEN-5 | OpenRouter Decisions API가 `alpha` 경로라 형식이 바뀔 수 있음. 응답 검증으로 대비 | T03 | - |

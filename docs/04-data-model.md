@@ -1,6 +1,6 @@
 # 04. 데이터 구조
 
-> 상태: 확정 · 최종 수정: 2026-09-28 · 관련 코드: `models.py`, `storage.py`, `metrics.py` · 관련 ADR: [ADR-005](decisions/ADR-005-json-in-git.md), [ADR-008](decisions/ADR-008-metrics-for-evidence.md)
+> 상태: 확정 · 최종 수정: 2026-09-29 · 관련 코드: `models.py`, `storage.py`, `metrics.py` · 관련 ADR: [ADR-005](decisions/ADR-005-json-in-git.md), [ADR-008](decisions/ADR-008-metrics-for-evidence.md)
 
 모든 운영 데이터는 저장소의 `data/` 폴더에 JSON으로 두고, 실행이 끝날 때마다 커밋한다. 시각은 모두 `+09:00`이 붙은 ISO 8601 문자열이다.
 
@@ -41,6 +41,7 @@ erDiagram
     date date PK
     datetime range_from
     datetime range_to
+    bool msg2_failed
   }
   ENTRY {
     int no
@@ -94,8 +95,8 @@ erDiagram
 
 ## DATA-01 articles.json — 수집함
 
-- 쓰는 곳: 모든 수집 실행 (추가), 리포트 실행 (범위 안 글 제거)
-- 규칙: SCH-R4 (중복 제거), SCH-R7 (마감 이후 글은 남김)
+- 쓰는 곳: 모든 수집 실행 (추가), 리포트 실행 (전송 성공 시에만 범위 안 글 제거)
+- 규칙: SCH-R4 (중복 제거), SCH-R6 (전송 실패 시 그대로 둠), SCH-R7 (마감 이후 글은 남김)
 
 ```json
 {
@@ -114,9 +115,11 @@ erDiagram
 
 | 필드 | 만드는 법 |
 |---|---|
-| `id` | 링크의 `topic?id=` 숫자 |
+| `id` | 링크의 `topic?id=` 숫자. id가 없는 항목은 건너뛴다 |
+| `title` | RSS 제목의 HTML 엔터티를 푼다 (GeekNews는 CDATA 안에 `&amp;`처럼 한 번 더 이스케이프함, L-20260929-2) |
+| `published` | RSS `published`를 KST로 변환 (SCH-R1). `updated`는 쓰지 않는다 (OPEN-4) |
 | `type` | 제목이 `Show GN:`으로 시작하면 `show`, `Ask GN:`이면 `ask`, 나머지 `news` |
-| `summary` | RSS `content`에서 HTML 태그 제거, 공백 정리 |
+| `summary` | RSS `content`에서 HTML 태그 제거, 공백 정리. 블록 태그(`<li>`, `<p>` 등) 경계는 공백으로 바꾼다. GeekNews가 앞부분만 잘라 `...`로 끝나며 약 40~190자다 (L-20260929-1) |
 
 ## DATA-02 state.json — 실행 상태
 
@@ -185,6 +188,7 @@ erDiagram
   "headline": "AI 에이전트 보안 사고가 이어진 하루",
   "trend": "…",
   "discord_message_ids": ["...", "..."],
+  "msg2_failed": false,
   "entries": [{
     "no": 1,
     "id": 34365,
@@ -211,6 +215,8 @@ erDiagram
 ```
 
 - Top이 아닌 항목은 `summary`, `why`, `verify`가 `null`이다.
+- 이 파일은 리포트 전송이 성공했을 때(메시지 1 성공)만 만든다 (SCH-R6).
+- `msg2_failed`: 메시지 2가 재시도 후에도 실패하면 `true`. 다음 리포트 실행이 가장 최근 리포트의 이 값을 보고 안내 카드를 붙인다 (DSC-10).
 - `thresholds_used`에는 그날 쓴 기준선 전체를 복사한다.
 
 ## DATA-06 metrics.jsonl — 실행 지표
@@ -233,6 +239,7 @@ erDiagram
 ```
 
 - 수집 실행(`kind: collect`)에는 `report`가 없다.
+- 리포트 실행이 SCH-R9로 건너뛰면 `"skipped": "already_sent"`를 넣고 `report`는 없다. 17:50 백업 실행도 `kind: report`이고 `scheduled_at`으로 구분한다.
 - 실패한 실행도 기록한다 (`"error": "요약 단계 429 재시도 초과"` 같은 한 줄 요약). 비밀값·원문 응답은 넣지 않는다.
 - 이 파일은 365일 보관한다 (한 줄 약 1KB).
 
@@ -254,3 +261,5 @@ erDiagram
 |---|---|
 | 2026-09-28 | 최초 작성. 아키텍처의 articles.json을 수집함(DATA-01)과 리포트 기록(DATA-05)으로 분리 |
 | 2026-09-28 | 포트폴리오 증거용 실행 지표 DATA-06 추가, DATA-D1에 RUN_METRIC 추가 (ADR-008) |
+| 2026-09-29 | T01: DATA-01 필드 표에 `title`·`published` 처리와 `summary` 실제 길이 추가 (OPEN-4, L-20260929-1·2) |
+| 2026-09-29 | DATA-01 수집함 정리를 전송 성공 시로 한정(SCH-R6). DATA-05에 `msg2_failed` 추가(DSC-10), DATA-D1 REPORT 갱신. DATA-06에 `skipped` 기록 추가(SCH-R9) |
