@@ -19,6 +19,11 @@ Claude Code 세션이 끝날 때마다 **맨 위에** 항목을 추가한다. �
 
 ---
 
+## 2026-09-30 · 로컬 이관 준비
+- 환경: 클라우드 세션 (Claude Code)
+- 한 일: `docs/SETUP.md`를 로컬 이어받기 기준으로 고침 (현재 상태, 기존 폴더 처리, `gh auth login`, 동작 확인 `uv sync`·`pytest`·`collect --dry-run`, 첫 로컬 세션 T03 지시문). 문서 보완·T00~T02를 main에 합치는 PR 생성
+- 다음 작업: T03 Jev 판단 (로컬, SETUP.md 4.2)
+
 ## 2026-09-30 · T02 범위 · 상태
 - 환경: 클라우드 세션 (Claude Code)
 - 기준 문서 ID: SCH-R1~R4, SCH-R6~R9, DATA-02, DATA-R2

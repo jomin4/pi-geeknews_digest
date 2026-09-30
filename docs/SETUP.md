@@ -1,8 +1,10 @@
 # 로컬 세팅과 Claude Code 시작하기 (Ubuntu 기준)
 
-> 상태: 확정 · 최종 수정: 2026-09-29 · 관련: [08 구현 계획](08-implementation-plan.md), [ADR-007](decisions/ADR-007-local-first.md)
+> 상태: 확정 · 최종 수정: 2026-09-30 · 관련: [08 구현 계획](08-implementation-plan.md), [ADR-007](decisions/ADR-007-local-first.md)
 
-순서: **1. 프로그램 설치 → 2. 레포 받기 → 3. 포트폴리오 도구 확인 → 4. Claude Code 시작(T00)**. 계정과 API 키는 필요한 작업 직전에 준비하면 된다 (5절).
+순서: **1. 프로그램 설치 → 2. 레포 받기 → 3. 동작 확인 → 4. Claude Code 시작(T03부터)**. 계정과 API 키는 필요한 작업 직전에 준비하면 된다 (5절).
+
+> **현재 상태 (2026-09-30)**: T00~T02는 클라우드 세션에서 끝났다 (키·봇 설정이 필요 없어서, 사용자 결정). 로컬은 **T03 Jev 판단**부터 시작한다. 지금까지 무엇을 왜 했는지는 [worklog.md](worklog.md) 맨 위부터 읽으면 된다.
 
 ## 1. 필요한 프로그램
 
@@ -14,17 +16,48 @@
 | 한글 글꼴 | PDF의 한글 | `sudo apt install -y fonts-noto-cjk` | `fc-list :lang=ko \| head -1` |
 | Claude Code | 구현 담당 | `curl -fsSL https://claude.ai/install.sh \| bash` (또는 `npm install -g @anthropic-ai/claude-code`) | `claude --version` |
 
-Python 3.12는 따로 설치하지 않아도 된다. T00에서 uv가 프로젝트에 맞는 버전을 받아 쓴다.
+Python 3.12는 따로 설치하지 않아도 된다. `uv sync`가 `.python-version`(3.12)에 맞는 버전을 받아 쓴다.
 
-## 2. 레포 받기
+macOS는 `brew install git uv node`, Windows는 WSL(Ubuntu)에서 위 표대로 설치한다.
+
+## 2. 레포 받기와 GitHub 연결
 
 ```bash
 cd ~
 git clone https://github.com/jomin4/pi-geeknews_digest.git
 cd pi-geeknews_digest
+git log --oneline -5      # 최근 커밋에 [T02] 범위 · 상태가 보이면 최신
 ```
 
-## 3. 포트폴리오 도구 확인 (처음 한 번)
+**이미 같은 이름의 폴더가 있다면** (설계 단계에서 만든 사본 등) 그 폴더에 이어 붙이지 말고 이름을 바꿔 두고 새로 clone한다. 옛 폴더에만 있는 파일이 있으면 새 폴더로 옮긴 뒤 `git status`로 확인한다.
+
+```bash
+mv ~/pi-geeknews_digest ~/pi-geeknews_digest.old
+```
+
+**push 권한**: clone은 로그인 없이 되지만 push에는 GitHub 인증이 필요하다. GitHub CLI로 한 번 로그인해 두면 git이 그 인증을 쓴다.
+
+```bash
+sudo apt install -y gh     # macOS: brew install gh
+gh auth login              # GitHub.com → HTTPS → 브라우저로 로그인
+gh auth setup-git
+git remote -v              # origin https://github.com/jomin4/pi-geeknews_digest.git
+```
+
+## 3. 동작 확인 (처음 한 번)
+
+### 3.1 Python 프로젝트
+
+```bash
+uv sync                                  # .venv 생성, 의존성 설치
+uv run pytest                            # 114 passed (T02 기준). 인터넷 없이도 통과해야 한다
+uv run gndigest --help
+uv run gndigest collect --dry-run        # 실제 GeekNews 피드 수집 → out/articles.json (data/는 안 바뀜)
+```
+
+마지막 명령이 `RSS 50건 · 새 글 …건 · 수집함 …건 → out/articles.json`을 출력하면 성공이다. `out/`은 git에 올라가지 않는다.
+
+### 3.2 포트폴리오 도구
 
 구현과 별개로, 그림과 PDF 도구가 내 컴퓨터에서 도는지 먼저 확인한다.
 
@@ -52,39 +85,46 @@ cp -r <my-claude-skills 경로>/portfolio-diagram-style ~/.claude/skills/
 
 이 저장소 안에서는 `CLAUDE.md`와 `portfolio/` 규칙이 이미 같은 내용을 담고 있어서, 스킬이 없어도 동작한다.
 
-### 4.2 첫 세션 (T00)
+### 4.2 첫 로컬 세션 (T03 Jev 판단)
+
+준비: OpenRouter 키 (5절). `.env`에 넣는다.
 
 ```bash
 cd ~/pi-geeknews_digest
-git checkout -b t00-skeleton
+git checkout main && git pull
+cp .env.example .env          # OPENROUTER_API_KEY= 뒤에 키 붙여넣기
+git checkout -b t03-jev
 claude
 ```
 
-Claude Code는 `CLAUDE.md`를 자동으로 읽는다. 첫 메시지로 아래를 붙여넣는다.
+Claude Code는 `CLAUDE.md`를 자동으로 읽는다. 클라우드 세션의 대화 내용은 모르므로, 첫 메시지로 아래를 붙여넣어 worklog부터 읽게 한다.
 
 ```
 이 저장소는 포트폴리오용 프로젝트다. 나는 기획·설계를 맡았고, 너는 설계 문서대로 구현하면서 문서를 최신으로 유지한다.
+T00~T02는 클라우드 세션에서 끝났고, 오늘부터 로컬에서 이어간다.
 
-먼저 읽을 것: docs/README.md → docs/08-implementation-plan.md → portfolio/README.md
+먼저 읽을 것: docs/README.md → docs/worklog.md (맨 위 4개 항목) → docs/03-jev-decisions.md (JEV-C1~C9, JEV-Q1~Q4) → docs/08-implementation-plan.md의 T03
 
-작업: T00 저장소 · 환경 · CLI 뼈대
-1. 코드를 쓰기 전에 구현할 규칙 ID, 만들 파일 목록, 기록할 지표를 보여주고 내 확인을 받아라.
-2. 완료 조건은 docs/08의 T00 항목을 따른다.
-3. 끝나면 CLAUDE.md 3절 문서 최신화 체크리스트를 모두 처리하고, 처리한 항목을 목록으로 보고해라.
-4. 설계 문서와 다르게 해야 할 부분이 생기면 코드를 쓰기 전에 멈추고 물어봐라.
-5. 현재 브랜치(t00-skeleton)에 커밋하고, 커밋 메시지는 [T00][규칙ID] 형식으로 써라. push는 내가 확인한 뒤에 한다.
+작업: T03 Jev 판단
+1. 코드를 쓰기 전에 구현할 규칙 ID, 만들 파일 목록, 기록할 지표(jev_calls, jev_errors, jev_cost_usd, jev_latency_ms_p50)를 보여주고 내 확인을 받아라.
+2. 가짜 응답(tests/fixtures/jev_*.json)으로 단위 테스트를 먼저 만든다. 테스트는 인터넷 없이 돌아야 한다 (tests/conftest.py가 네트워크를 막는다).
+3. 실제 API 스모크 테스트(기사 10건)는 실행 전에 내 승인을 받는다. 키는 `uv run --env-file .env ...`로만 넘기고, 키 값을 출력·기록하지 않는다.
+4. OPEN-1(한국어 vs 영어 criteria), OPEN-5(응답 형식) 결과를 docs/README.md §5와 portfolio/logs에 남긴다. 스모크 결과는 worklog 표와 portfolio/evidence/R1/에도 남긴다.
+5. 실제 응답 형식이 문서와 다르면 fixture를 실제 형식에 맞추고, 문서와 다르게 구현해야 하면 코드 전에 멈추고 물어본다.
+6. 끝나면 CLAUDE.md 3절 체크리스트를 모두 처리하고 목록으로 보고한다.
+7. 현재 브랜치(t03-jev)에 커밋하고, 커밋 메시지는 [T03][규칙ID] 형식으로 쓴다. push는 내가 확인한 뒤에 한다.
 ```
 
 ### 4.3 이후 작업의 흐름 (작업 하나 = 세션 하나 = 브랜치 하나)
 
-1. `git checkout main && git pull && git checkout -b t01-rss`
+1. 이전 작업 PR이 병합된 뒤 `git checkout main && git pull && git checkout -b t04-selector`
 2. `claude` 실행 후 아래 틀로 지시 (`/clear`로 이전 대화를 비우고 시작)
 
 ```
-작업: T01 RSS 수집
-기준 문서: docs/02-schedule-and-range.md, docs/04-data-model.md (SCH-R1, SCH-R4, DATA-01)
+작업: T04 선별 · 번호
+기준 문서: docs/03-jev-decisions.md (JEV-R1~R9, JEV-D1), docs/06-discord-report.md (DSC-03)
 CLAUDE.md의 작업 절차와 3절 체크리스트를 따를 것.
-완료 조건은 docs/08-implementation-plan.md의 T01 항목.
+완료 조건은 docs/08-implementation-plan.md의 T04 항목.
 시작 전에 규칙 ID·파일 목록·지표를 보여주고, 문서와 다르게 해야 하면 멈추고 물어볼 것.
 ```
 
@@ -99,7 +139,7 @@ CLAUDE.md의 작업 절차와 3절 체크리스트를 따를 것.
 
 | 작업 | 필요한 것 | 준비 |
 |---|---|---|
-| T00 ~ T02 | 없음 | - |
+| T00 ~ T02 | 없음 | 완료 (클라우드 세션, 2026-09-29~30) |
 | T03 Jev 판단 | OpenRouter API 키, 소액 충전 | openrouter.ai → Settings → Keys. Jev는 입력 토큰만 과금되며 하루 사용량이 매우 작다 |
 | T05 Gemini 요약 | Gemini API 키 (무료 티어) | Google AI Studio → Get API key. 무료 티어 모델 이름과 한도를 확인해 OPEN-2에 기록 |
 | T07 Discord 전송 | 봇 토큰, 테스트 서버, 채널 ID 2개, 내 사용자 ID | 아래 5.1 |
@@ -133,3 +173,4 @@ CLAUDE.md의 작업 절차와 3절 체크리스트를 따를 것.
 |---|---|
 | 2026-09-29 | 최초 작성 (Ubuntu 기준) |
 | 2026-09-29 | T00: `.env`를 `uv run --env-file`로 넘기는 방법 추가 |
+| 2026-09-30 | 로컬 이관: 현재 상태(T00~T02 완료), 기존 폴더 처리·GitHub 인증(`gh auth login`), 동작 확인(3.1), 첫 로컬 세션을 T03으로 바꿈, 4.3 예시를 T04로 |
