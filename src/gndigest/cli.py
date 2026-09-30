@@ -12,7 +12,7 @@ from datetime import datetime
 from pathlib import Path
 
 from gndigest import __version__, metrics, rss, storage, window
-from gndigest.config import DATA_DIR, KST, OUT_DIR
+from gndigest.config import DATA_DIR, KST, OUT_DIR, load_settings
 from gndigest.models import ArticlesFile
 
 # 명령 → 동작을 구현할 작업 (docs/08-implementation-plan.md)
@@ -91,10 +91,11 @@ def run_collect(args: argparse.Namespace) -> int:
 
     try:
         inbox = storage.read_model(articles_path, ArticlesFile, ArticlesFile())
-        # state.json 연결은 T02. 그 전에는 첫 실행 규칙(어제 17:30)을 쓴다 (DATA-02).
-        last_cutoff = window.initial_last_cutoff(started)
+        state = window.load_state(
+            DATA_DIR / "state.json", started, load_settings().jev_model, create=not args.dry_run
+        )
         raw = args.feed_file.read_bytes() if args.feed_file else rss.fetch_feed()
-        result = rss.collect(raw, inbox.items, last_cutoff, started)
+        result = rss.collect(raw, inbox.items, state.last_cutoff, started)
         storage.write_model(target, ArticlesFile(items=result.inbox))
     except (rss.RssError, storage.DataFileError, OSError) as exc:
         metrics.record_run(

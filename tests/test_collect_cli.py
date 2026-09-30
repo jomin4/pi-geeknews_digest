@@ -52,7 +52,7 @@ def test_sch_r4_collect_twice_keeps_inbox_and_logs_both_runs(workdir: Path) -> N
     assert [r["new_items"] for r in rows] == [50, 0]
 
 
-def test_sch_r4_collect_uses_initial_cutoff_yesterday_1730(workdir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_data02_dry_run_without_state_uses_yesterday_1730(workdir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(cli, "now_kst", lambda: datetime(2026, 9, 30, 9, 0, tzinfo=KST))
     assert cli.main(["collect", "--dry-run", "--feed-file", str(FIXTURE)]) == 0
     items = json.loads((workdir / "out" / "articles.json").read_text(encoding="utf-8"))["items"]
@@ -77,3 +77,31 @@ def test_data_r2_collect_stops_on_broken_inbox(workdir: Path) -> None:
     assert (workdir / "data" / "articles.json").read_text(encoding="utf-8") == "{ broken"
     (row,) = read_jsonl(workdir / "data" / "metrics.jsonl")
     assert "JSON" in row["error"]
+
+
+def test_data02_first_collect_creates_state(workdir: Path) -> None:
+    assert not (workdir / "data" / "state.json").exists()
+    assert cli.main(["collect", "--feed-file", str(FIXTURE)]) == 0
+    state = json.loads((workdir / "data" / "state.json").read_text(encoding="utf-8"))
+    assert state["last_cutoff"] == "2026-09-28T17:30:00+09:00"  # NOW(9/29 21:51)의 어제 17:30
+    assert state["jev_model"] == "typesafe/jev-1.13"
+
+
+def test_sch_r8_dry_run_collect_does_not_create_state(workdir: Path) -> None:
+    assert cli.main(["collect", "--dry-run", "--feed-file", str(FIXTURE)]) == 0
+    assert not (workdir / "data" / "state.json").exists()
+
+
+def test_sch_r4_collect_uses_last_cutoff_from_state(workdir: Path) -> None:
+    from gndigest.storage import write_model
+    from gndigest.window import new_state
+
+    state = new_state(NOW, "typesafe/jev-1.13").model_copy(
+        update={"last_cutoff": datetime(2026, 9, 29, 17, 30, tzinfo=KST)}
+    )
+    write_model(workdir / "data" / "state.json", state)
+    before = (workdir / "data" / "state.json").read_text(encoding="utf-8")
+    assert cli.main(["collect", "--feed-file", str(FIXTURE)]) == 0
+    items = json.loads((workdir / "data" / "articles.json").read_text(encoding="utf-8"))["items"]
+    assert items and all(i["published"] > "2026-09-29T17:30:00+09:00" for i in items)
+    assert (workdir / "data" / "state.json").read_text(encoding="utf-8") == before  # 수집은 state를 바꾸지 않음

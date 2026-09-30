@@ -19,6 +19,22 @@ Claude Code 세션이 끝날 때마다 **맨 위에** 항목을 추가한다. �
 
 ---
 
+## 2026-09-30 · T02 범위 · 상태
+- 환경: 클라우드 세션 (Claude Code)
+- 기준 문서 ID: SCH-R1~R4, SCH-R6~R9, DATA-02, DATA-R2
+- 한 일:
+  - `models.py`: State, Thresholds, PendingProposal (JSON 키 `from`은 alias로 문서 모양 유지, 기준선 키는 6개만 허용)
+  - `window.py`: `report_cutoff`(SCH-R3, 실행 이전의 가장 최근 17:30), `in_range`(SCH-R2), `split_inbox`(SCH-R7), `already_sent`(SCH-R9), `advance_after_send`(SCH-R6, 전송 성공 뒤에만 호출), `new_state`·`load_state`(DATA-02, dry-run은 파일을 만들지 않음 SCH-R8)
+  - `cli.py`: collect가 `state.json`의 `last_cutoff`를 쓴다. 첫 실행(dry-run 아님)이면 state.json 생성. 수집은 state를 바꾸지 않는다
+  - `storage.write_model`: alias로 저장 (`from`)
+- 바뀐 파일: `src/gndigest/{models,window,cli,storage}.py`, `tests/test_{window,state,collect_cli}.py`, `docs/02`, `docs/08`, `portfolio/logs/L-20260930-1.md`, `portfolio/problems/{P1,R2}`, `README.md`
+- 테스트: `uv run pytest` 통과 114 / 실패 0 (네트워크 없는 환경에서도 114). 02 §2 경계 사례 6개 모두 `test_sch_r*_caseN_*`로 존재
+- 문서와 다르게 한 것: SCH-R3에 없던 경우(17:30 전·자정 넘어 시작한 실행)를 사용자 결정으로 "가장 최근 17:30"으로 정하고 02 문서를 먼저 고침 (L-20260930-1)
+- 사용자 결정 (T01 관찰 후속): RSS 원문 요약(중앙값 152자)과 Gemini 요약 목표(150자)가 비슷하지만 GEM-A는 그대로 둔다
+- 남은 것: SCH-R5는 cron 설정이라 T11, SCH-R6·R9를 리포트 실행에 연결하는 일은 T07·T10
+- 지표: 없음
+- 다음 작업: T03 Jev 판단 (실제 API 스모크 테스트가 있어 로컬, ADR-007)
+
 ## 2026-09-29 · T01 RSS 수집
 - 환경: 클라우드 세션 (Claude Code). 사용자가 환경 네트워크를 Custom(`news.hada.io` + 기본 패키지 저장소)으로 바꿔 피드를 받음
 - 기준 문서 ID: ARCH-02, DATA-01, DATA-06, DATA-R1, DATA-R2, DATA-R7, SCH-R1, SCH-R4, OPEN-4

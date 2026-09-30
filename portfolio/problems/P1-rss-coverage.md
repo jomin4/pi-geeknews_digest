@@ -1,6 +1,6 @@
 # P1. 리포트 수집에서 RSS 50건 제한으로 생기는 누락을 하루 4회 수집과 고정 마감으로 해결 (가제)
 
-> 상태: 후보 · 관련 설계: SCH-R1~R7, ADR-001, ADR-004 · 관련 로그: [L-20260929-1](../logs/L-20260929-1.md) · 그림: `FIG-P1-rss-coverage` · 증거: `evidence/P1/`
+> 상태: 후보 · 관련 설계: SCH-R1~R7, ADR-001, ADR-004 · 관련 로그: [L-20260929-1](../logs/L-20260929-1.md), [L-20260930-1](../logs/L-20260930-1.md) · 그림: `FIG-P1-rss-coverage` · 증거: `evidence/P1/`
 
 <!-- PDF:START -->
 
@@ -55,3 +55,4 @@
 |---|---|---|
 | 2026-09-28 | 설계 대화 | 후보 등록 |
 | 2026-09-29 | Claude Code | T01: 수집 지표(`rss_items`, `new_items`, `rss_oldest_published`, `rss_newest_published`) 기록 구현. 피드 저장본 1회 관찰을 로그·증거로 남김 (50건 = 22시간 33분치, `evidence/P1/2026-09-29-rss-snapshot.md`) |
+| 2026-09-30 | Claude Code | T02: 경계 사례 6개 테스트(`tests/test_window.py`, `test_sch_r*`) 구현. 17:30 전·자정 넘어 시작한 실행의 마감 규칙 보완 (L-20260930-1) |

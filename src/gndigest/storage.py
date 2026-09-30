@@ -50,7 +50,7 @@ def read_model(path: Path, model: type[M], default: M | None = None) -> M:
 # spec: DATA-R1, DATA-R7
 def write_model(path: Path, obj: BaseModel) -> None:
     """임시 파일에 쓴 뒤 이름을 바꿔 원자적으로 저장한다. 들여쓰기 2칸, UTF-8."""
-    text = json.dumps(obj.model_dump(mode="json"), ensure_ascii=False, indent=2) + "\n"
+    text = json.dumps(obj.model_dump(mode="json", by_alias=True), ensure_ascii=False, indent=2) + "\n"
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
     tmp = Path(tmp_name)
